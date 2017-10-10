@@ -55,44 +55,54 @@ class Multi_GPU_train():
             print('No checkpoint')
 
         summary_writer = tf.summary.FileWriter(self.args.log_dir, self.sess.graph)
-        
-        tf.train.start_queue_runners(sess=self.sess)
-        
-        for epoch in range(self.init_epoch, self.args.num_epoch):
-            start_time = time.time()
-            # Train
-            _, loss_, ler_, train_summary = self.sess.run([self.train_net.train_op, self.train_net.losses, self.train_net.ler, self.train_summary_op])
-            print('Training loss: %3.4f, ler: %3.4f at epoch %d' % (loss_, ler_, epoch+1))
 
-            if epoch % self.args.valid_interval == 0:
-                # Valid
-                best_valid_ler = 1000
-                best_valid_loss = 1000
-                valid_loss = 0
-                valid_ler = 0
-                # Conduct validation several types for different composition of batch
-                for valid_iter in range(self.args.valid_iteration):
-                    valid_loss_, valid_ler_ = self.sess.run([self.valid_net.losses, self.valid_net.ler])
-                    valid_loss += valid_loss_
-                    valid_ler += valid_ler_
-                valid_loss /= self.args.valid_iteration
-                valid_ler /= self.args.valid_iteration
-    
-                # Tensor log for validation values
-                valid_summary = tf.Summary()
-                valid_summary.value.add(tag='valid/loss', simple_value=value_loss)
-                valid_summary.value.add(tag='valid/ler', simple_value=value_ler)
-                valid_summary.value.add(tag='valid/best_valid_ler', simple_value=best_valid_ler)
-                summary_writer.add_summary(valid_summary, epoch)
-                self.write_log(epoch, loss_, ler_, valid_loss, valid_ler, start_time)
-                summary_writer.add_summary(train_summary, epoch)
-                summary_writer.flush()
-    
-                if best_valid_ler > valid_ler:
-                    best_valid_ler = min(best_valid_ler, valid_ler)
-                    best_valid_loss = min(best_valid_loss, valid_loss)
-                    # Save only when validation improved
-                    self.save(global_step=epoch)
+        coord = tf.train.Coordinator()        
+        threads = tf.train.start_queue_runners(sess=self.sess)
+
+        try:
+            for epoch in range(self.init_epoch, self.args.num_epoch):
+                start_time = time.time()
+                # Train
+                _, loss_, ler_, train_summary = self.sess.run([self.train_net.train_op, self.train_net.losses, self.train_net.ler, self.train_summary_op])
+                print('Training loss: %3.4f, ler: %3.4f at epoch %d' % (loss_, ler_, epoch+1))
+            
+                if epoch % self.args.valid_interval == 0:
+                    # Valid
+                    best_valid_ler = 1000
+                    best_valid_loss = 1000
+                    valid_loss = 0
+                    valid_ler = 0
+                    # Conduct validation several types for different composition of batch
+                    for valid_iter in range(self.args.valid_iteration):
+                        valid_loss_, valid_ler_ = self.sess.run([self.valid_net.losses, self.valid_net.ler])
+                        valid_loss += valid_loss_
+                        valid_ler += valid_ler_
+                    valid_loss /= self.args.valid_iteration
+                    valid_ler /= self.args.valid_iteration
+            
+                    # Tensor log for validation values
+                    valid_summary = tf.Summary()
+                    valid_summary.value.add(tag='valid/loss', simple_value=value_loss)
+                    valid_summary.value.add(tag='valid/ler', simple_value=value_ler)
+                    valid_summary.value.add(tag='valid/best_valid_ler', simple_value=best_valid_ler)
+                    summary_writer.add_summary(valid_summary, epoch)
+                    self.write_log(epoch, loss_, ler_, valid_loss, valid_ler, start_time)
+                    summary_writer.add_summary(train_summary, epoch)
+                    summary_writer.flush()
+            
+                    if best_valid_ler > valid_ler:
+                        best_valid_ler = min(best_valid_ler, valid_ler)
+                        best_valid_loss = min(best_valid_loss, valid_loss)
+                        # Save only when validation improved
+                        self.save(global_step=epoch)
+
+        except tf.errors.OutOfRangeError:
+            print('Epoch limited')
+        except KeyboardInterrupt:
+            print('End training')
+        finally:
+            coord.request_stop()
+            coord.join(threads)
             
 
     @property

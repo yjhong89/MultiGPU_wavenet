@@ -47,6 +47,7 @@ def read_inputs(data_category, shuffle=False):
     with open(csv_path) as csv_file:
         reader = csv.reader(csv_file, delimiter=',')
         for row in reader:
+            #print(os.path.join(file_path, 'mfcc') + '/' + row[0] + '.npy')
             # MFCC FILE
             mfcc_file.append(os.path.join(file_path, 'mfcc') + '/' + row[0] + '.npy')
             # Corresponding LABEL
@@ -97,11 +98,12 @@ def _generate_wave_label_batch(wave, label, min_queue_examples, batch_size, shuf
 @ops.producer_func
 def _load_mfcc(src_list):
     # Label, wave_file
-    label, mfcc_file = src_list               
+    # Both file paths are encoded as 'byte' class, need to decode to string
+    label, mfcc_file = src_list     
     # Decode string to integer
-    label = np.fromstring(label, np.int)
+    label = np.fromstring(label.decode('utf-8'), np.int)
     # Numpy load mfcc
-    mfcc = np.load(mfcc_file, allow_pickle=False)
+    mfcc = np.load(mfcc_file.decode('utf-8'), allow_pickle=False)
 
     return label, mfcc
  
@@ -115,13 +117,11 @@ def get_batches(data_category, batch_size, num_gpu, num_threads=10, shuffle=Fals
 
     # Make batches for each gpu
     for i in range(num_gpu):
-        waves, labels, seq_len = _generate_wave_label_batch(wave=wave_q, label=label_q, min_queue_examples=min_queue_examples, batch_size=batch_size, shuffle=shuffle, num_threads=num_threads)
-        #print(labels.get_shape())
-        #print(waves.get_shape())
+        waves, labels, seq_len = _generate_wave_label_batch(wave=wave_q, label=label_q, min_queue_examples=min_queue_examples, batch_size=batch_size, shuffle=False, num_threads=num_threads)
         indices = tf.where(tf.not_equal(tf.cast(labels, tf.float32), 0.))
         #sparse_label = ops.sparse_tensor_form(labels)
         wave_list.append(waves)
-        label_list.append(tf.SparseTensor(indices=indices, values=tf.gather_nd(labels, indices), dense_shape=tf.cast(tf.shape(labels), tf.int64)))
+        label_list.append(tf.SparseTensor(indices=indices, values=tf.gather_nd(labels, indices)-1, dense_shape=tf.cast(tf.shape(labels), tf.int64)))
         seq_len_list.append(seq_len)
 
     return wave_list, label_list, seq_len_list

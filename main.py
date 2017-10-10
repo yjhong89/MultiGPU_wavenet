@@ -55,9 +55,9 @@ def main():
     run_config = tf.ConfigProto()
     # GPU fraction to be allocated
     #run_config = tf.ConfigProto(gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=self.args.gpu_fraction)
-    run_config.log_device_placement=True
+    run_config.log_device_placement=False
     run_config.gpu_options.allow_growth=True
-    run_config.allow_soft_placement=False
+    run_config.allow_soft_placement=True
     
     with tf.Session(config=run_config) as sess:
     	if args.is_train:
