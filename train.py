@@ -66,7 +66,7 @@ class Multi_GPU_train():
                 _, loss_, ler_, train_summary = self.sess.run([self.train_net.train_op, self.train_net.losses, self.train_net.ler, self.train_summary_op])
                 print('Training loss: %3.4f, ler: %3.4f at epoch %d' % (loss_, ler_, epoch+1))
             
-                if epoch % self.args.valid_interval == 0:
+                if (epoch+1) % self.args.valid_interval == 0:
                     # Valid
                     best_valid_ler = 1000
                     best_valid_loss = 1000
