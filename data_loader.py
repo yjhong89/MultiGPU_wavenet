@@ -48,7 +48,7 @@ def read_inputs(data_category, shuffle=False):
         reader = csv.reader(csv_file, delimiter=',')
         for row in reader:
             # MFCC FILE
-            mfcc_file.append(os.path.join(PARENT_PATH, 'mfcc') + '/' + row[0] + '.npy')
+            mfcc_file.append(os.path.join(file_path, 'mfcc') + '/' + row[0] + '.npy')
             # Corresponding LABEL
             label.append(np.asarray(row[1:], dtype=np.int).tostring())
 
