@@ -67,13 +67,32 @@ def _generate_wave_label_batch(wave, label, min_queue_examples, batch_size, shuf
     '''
 
     if not shuffle:
-        wave, label = tf.train.batch([wave, label], batch_size=batch_size, num_threads=num_threads, \
-                                    capacity=min_queue_examples+20*batch_size)
+        # dynamic_pad=True for variable length inputs, makes [batch, max time step, features]
+        # labels also padded with 0
+        wave, label = tf.train.batch([wave, label], batch_size=batch_size, shapes=[(None, 39), (None,)], num_threads=num_threads, \
+                                    capacity=min_queue_examples+20*batch_size, dynamic_pad=True)
     else:
-        wave, label = tf.train.shuffle_batch([wave, label], batch_size=batch_size, num_threads=num_threads, \
-                                capacity=min_queue_examples+20*batch_size, min_after_dequeue=min_queue_examples)
+        #dtypes = list(map(lambda (x, y): (x.dtype, y.dtype), (wave, label)))
+        queue = tf.RandomShuffleQueue(capacity=min_queue_examples+20*batch_size, min_after_dequeue=min_queue_examples, dtypes=[tf.float32, tf.int32])
+        enqueue_op = queue.enqueue([wave, label])
+        queue_r = tf.train.QueueRunner(queue, [enqueue_op]*num_threads)
+        tf.add_to_collection(tf.GraphKeys.QUEUE_RUNNERS, queue_r)
+        wave, label = queue.dequeue()
+        wave, label = tf.train.batch([wave, label], batch_size=batch_size, shapes=[(None, 39), (None,)], num_threads=num_threads, \
+                                    capacity=min_queue_examples+20*batch_size, dynamic_pad=True)
+        # tf.train.shuffle_batch does not support dynamic pad option
+        #wave, label = tf.train.shuffle_batch([wave, label], batch_size=batch_size, num_threads=num_threads, \
+        #                        capacity=min_queue_examples+20*batch_size, min_after_dequeue=miin_queue_examples)
 
-    return wave, label
+    '''
+        tf.reduce_sum(wave, axis=2) makes [batch, max time step], padded part would be 0
+        tf.not_equal returns bool of shape [batch, max time step]
+        tf.cast casting boolean to integer
+        tf.reduce_sum(whole, axis=1) returns of shape [batch, ] and each element stands for sequence length of each batch
+    '''
+    sequence_len = tf.reduce_sum(tf.cast(tf.not_equal(tf.reduce_sum(wave, axis=2), 0.), tf.int32), axis=1)
+
+    return wave, label, sequence_len
 
 @ops.producer_func
 def _load_mfcc(src_list):
@@ -92,17 +111,18 @@ def get_batches(data_category, batch_size, num_gpu, num_threads=10, shuffle=Fals
     capacity = batch_size*50
     label_input, wave_input = read_inputs(data_category, shuffle=shuffle)
     wave_list, label_list, seq_len_list = [], [], []
+    label_q, wave_q = _load_mfcc(source=[label_input, wave_input], dtype=[tf.int32, tf.float32], capacity=capacity, num_threads=num_threads)
 
     # Make batches for each gpu
     for i in range(num_gpu):
-        label_q, wave_q = _load_mfcc(source=[label_input, wave_input], dtype=[tf.int32, tf.float32], capacity=capacity, num_threads=num_threads)
-        waves, labels = _generate_wave_label_batch(wave=wave_q, label=label_q, min_queue_examples=min_queue_examples, batch_size=batch_size, shuffle=shuffle, num_threads=num_threads)
-        # Padding for input and make label sparse tensor
-        padded_wave, wave_seq_len = ops.pad_sequences(waves)
-        sparse_label = ops.sparse_tensor_form(labels)
+        waves, labels, seq_len = _generate_wave_label_batch(wave=wave_q, label=label_q, min_queue_examples=min_queue_examples, batch_size=batch_size, shuffle=shuffle, num_threads=num_threads)
+        #print(labels.get_shape())
+        #print(waves.get_shape())
+        indices = tf.where(tf.not_equal(tf.cast(labels, tf.float32), 0.))
+        #sparse_label = ops.sparse_tensor_form(labels)
         wave_list.append(padded_wave)
-        label_list.append(sparse_label)
-        seq_len_list.append(wave_seq_len)
+        label_list.append(tf.SparseTensor(indices=indices, values=tf.gather_nd(labels, indices), dense_shape=tf.shape(labels))
+        seq_len_list.append(seq_len)
 
     return wave_list, label_list, seq_len_list
     

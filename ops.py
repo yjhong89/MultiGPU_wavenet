@@ -205,11 +205,11 @@ def ln(tensor, scope=None, epsilon=1e-5):
 class SpeechLoader():
     # Define class constant
     SPACE_TOKEN = '<space>'
-    SPACE_INDEX = 0
+    SPACE_INDEX = 27
     APSTR_TOKEN = '<apstr>'
-    APSTR_INDEX = 27 
+    APSTR_INDEX = 28 
     EOS_TOKEN = '<eos>'
-    EOS_INDEX = 28 
+    EOS_INDEX = 29 
     PUNC_TOKEN = '<punc>'
     BLANK_TOKEN = '<blank>'
     # ord('a') = 97
