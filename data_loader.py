@@ -36,7 +36,7 @@ def process_input(data_category):
         # label is a numpy array
         # Change it to list to 'add' with [data_index]
         writer.writerow([data_index] + label.tolist())
-        np.save(mfcc_npy_path + '/' + data_index + '.npy', wave)
+        np.save(mfcc_npy_path + '/' + data_index + '.npy', wave, allow_pickle=False)
         
 
 def read_inputs(data_category, shuffle=False):
@@ -101,7 +101,7 @@ def _load_mfcc(src_list):
     # Decode string to integer
     label = np.fromstring(label, np.int)
     # Numpy load mfcc
-    mfcc = np.load(mfcc_file, encoding='bytes')
+    mfcc = np.load(mfcc_file, allow_pickle=False)
 
     return label, mfcc
  
@@ -128,4 +128,4 @@ def get_batches(data_category, batch_size, num_gpu, num_threads=10, shuffle=Fals
     
 
 if __name__ == "__main__":
-   process_input('valid') 
+   process_input('train') 
