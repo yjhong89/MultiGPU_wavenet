@@ -112,7 +112,7 @@ def get_batches(data_category, batch_size, num_gpu, num_threads=10, shuffle=Fals
     min_queue_examples = batch_size*10
     capacity = batch_size*50
     label_input, wave_input = read_inputs(data_category, shuffle=shuffle)
-    wave_list, label_list, seq_len_list = [], [], []
+    wave_list, label_list, seq_len_list = ([], [], [])
     label_q, wave_q = _load_mfcc(source=[label_input, wave_input], dtype=[tf.int32, tf.float32], capacity=capacity, num_threads=num_threads)
 
     # Make batches for each gpu

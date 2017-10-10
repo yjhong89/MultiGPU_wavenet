@@ -57,7 +57,7 @@ class Multi_GPU_train():
         summary_writer = tf.summary.FileWriter(self.args.log_dir, self.sess.graph)
 
         coord = tf.train.Coordinator()        
-        threads = tf.train.start_queue_runners(sess=self.sess)
+        threads = tf.train.start_queue_runners(sess=self.sess, coord=coord)
 
         try:
             for epoch in range(self.init_epoch, self.args.num_epoch):
