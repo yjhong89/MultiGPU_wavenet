@@ -101,7 +101,7 @@ def _load_mfcc(src_list):
     # Decode string to integer
     label = np.fromstring(label, np.int)
     # Numpy load mfcc
-    mfcc = np.load(mfcc_file)
+    mfcc = np.load(mfcc_file, encoding='bytes')
 
     return label, mfcc
  
@@ -120,12 +120,12 @@ def get_batches(data_category, batch_size, num_gpu, num_threads=10, shuffle=Fals
         #print(waves.get_shape())
         indices = tf.where(tf.not_equal(tf.cast(labels, tf.float32), 0.))
         #sparse_label = ops.sparse_tensor_form(labels)
-        wave_list.append(padded_wave)
-        label_list.append(tf.SparseTensor(indices=indices, values=tf.gather_nd(labels, indices), dense_shape=tf.shape(labels))
+        wave_list.append(waves)
+        label_list.append(tf.SparseTensor(indices=indices, values=tf.gather_nd(labels, indices), dense_shape=tf.cast(tf.shape(labels), tf.int64)))
         seq_len_list.append(seq_len)
 
     return wave_list, label_list, seq_len_list
     
 
 if __name__ == "__main__":
-   process_input('train') 
+   process_input('valid') 

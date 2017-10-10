@@ -45,7 +45,7 @@ class Wavenet_Model():
         decoded, _ = tf.nn.ctc_greedy_decoder(logits_reshaped, seq_len)	
         ler = tf.reduce_mean(tf.edit_distance(tf.cast(decoded[0], tf.int32), label))
 
-        return logits, probibility, loss, ler
+        return logits, probability, loss, ler
 
     def build_model(self):
         # Build towers for each GPU
@@ -62,7 +62,7 @@ class Wavenet_Model():
                     # If gpu index is not 0, reuse variable
                     if self.reuse or i > 0:
                         # Call reuse_variables()
-                        tf.get_variable_scope.reuse_variables()
+                        tf.get_variable_scope().reuse_variables()
                         
                     logits, prob, loss, ler = self.build_tower(self.wave_batch_list[i], self.label_batch_list[i], self.seq_len_list[i])
                     self.logits_list.append(logits)
@@ -91,7 +91,7 @@ class Wavenet_Model():
                 with tf.name_scope('tower_%d' % i) as scope:
                     print('Compute gradients of %s' % scope)
                     if self.reuse or i >0:
-                        tf.get_variable_scope.reuse_variables()
+                        tf.get_variable_scope().reuse_variables()
                 
                     trainable_vr = tf.trainable_variables()
                     # compute_gradients outputs list of tuples(grad,var)
@@ -103,13 +103,14 @@ class Wavenet_Model():
         print('Averaging gradients')
         with tf.device('/cpu:0'):
             grads_vars = self.average_gradients(self.grad_vars)
+            apply_grad_op = optimizer.apply_gradients(grads_vars, global_step=self.global_step)
             # When use tf.contrib.layers.layer_norm(batch_norm), update_ops are placed in tf.GraphKeys.UPDATE_OPS so they need to be added as a dependency to the train_op
             update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-            with tf.control_dependencies(update_ops):
-                self.train_op = optimizer.apply_gradients(grads_vars, global_step=self.global_step)
+            #with tf.control_dependencies(update_ops):
+            #    self.train_op = optimizer.apply_gradients(grads_vars, global_step=self.global_step)
 
             # '*' to represent op list
-            #self.train_op = tf.group(*(update_ops+[apply_grad_ops]))
+            self.train_op = tf.group(*(update_ops+[apply_grad_op]))
 
                         
     def average_gradients(self, grad_and_var):
@@ -146,8 +147,8 @@ class Wavenet_Model():
                 # Append on tower dimension
                 grads.append(expanded_gradient)
 
-            # Concatenate and average over tower dimension
-            grad = tf.reduce_mean(tf.concat(grads, axis=0))
+            # Concatenate and average over tower dimension, axis needs to be defined.
+            grad = tf.reduce_mean(tf.concat(grads, axis=0), axis=0)
             
             # Since variables are shared across towers, so return only the first tower`s variable
             var = g_v[0][1]

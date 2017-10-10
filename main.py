@@ -18,7 +18,7 @@ def main():
     parser.add_argument('--log_dir', type=str, default='./logs')
     parser.add_argument('--checkpoint_dir', type=str, default='./checkpoint', help='To restore variables and model')
     parser.add_argument('--batch_size', type=int, default=10)
-    parser.add_argument('--num_gpu', type=int, default=4)
+    parser.add_argument('--num_gpu', type=int, default=2)
     parser.add_argument('--num_epoch', type=int, default=2000)
     parser.add_argument('--valid_interval', type=int, default=100)
     parser.add_argument('--valid_iteration', type=int, default=100)
@@ -55,8 +55,9 @@ def main():
     run_config = tf.ConfigProto()
     # GPU fraction to be allocated
     #run_config = tf.ConfigProto(gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=self.args.gpu_fraction)
-    run_config.log_device_placement=False
+    run_config.log_device_placement=True
     run_config.gpu_options.allow_growth=True
+    run_config.allow_soft_placement=True
     
     with tf.Session(config=run_config) as sess:
     	if args.is_train:

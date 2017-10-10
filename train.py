@@ -36,11 +36,11 @@ class Multi_GPU_train():
                 test_wave, test_label, test_seq_len = data_loader.get_batches(data_category='valid', shuffle=self.args.shuffle, batch_size=self.args.batch_size, num_gpu=self.args.num_gpu, num_threads=num_threads)
                 
         # Build model
-        self.train_net = Wavenet_Model(self.args, train_wave, train_label, train_seq_len, global_step, name='train')
+        self.train_net = Wavenet_Model(self.args, train_wave, train_label, train_seq_len, self.global_step, name='train')
         self.train_net.build_model()                
         self.train_net.train_optimizer()
         self.train_summary_op = tf.summary.merge_all()
-        self.valid_net = Wavenet_Model(selfargs, test_wave, test_label, test_seq_len, global_step, name='valid', reuse=True)
+        self.valid_net = Wavenet_Model(self.args, test_wave, test_label, test_seq_len, self.global_step, name='valid', reuse=True)
         self.valid_net.build_model() 
         
         # Checkpoint with maximum checkpoints to keep 5
@@ -58,10 +58,11 @@ class Multi_GPU_train():
         
         tf.train.start_queue_runners(sess=self.sess)
         
-        for epoch in xrange(self.init_epoch, self.args.num_epoch):
+        for epoch in range(self.init_epoch, self.args.num_epoch):
             start_time = time.time()
             # Train
             _, loss_, ler_, train_summary = self.sess.run([self.train_net.train_op, self.train_net.losses, self.train_net.ler, self.train_summary_op])
+            print('Training loss: %3.4f, ler: %3.4f at epoch %d' % (loss_, ler_, epoch+1))
 
             if epoch % self.args.valid_interval == 0:
                 # Valid
@@ -96,7 +97,7 @@ class Multi_GPU_train():
 
     @property
     def model_dir(self):
-        return '{}blocks_{}layers_{}width_{}'.format(self.args.num_blocks, self.args.num_wavenet_layers, sef.args.filter_width, self.args.dilated_activation)
+        return '{}blocks_{}layers_{}width_{}'.format(self.args.num_blocks, self.args.num_wavenet_layers, self.args.filter_width, self.args.dilated_activation)
 
     def save(self, global_step):
         model_name='WAVENET_MG'
@@ -108,7 +109,7 @@ class Multi_GPU_train():
         print('Checkpoint saved')   
 
     def load(self):
-        checkpoint_dir = os.path.join(self.args.checkpoint_dir, model_dir)
+        checkpoint_dir = os.path.join(self.args.checkpoint_dir, self.model_dir)
         ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
         if ckpt and ckpt.model_checkpoint_path:
             ckpt_name = os.path.basename(ckpt.model_checkpoint_path)
