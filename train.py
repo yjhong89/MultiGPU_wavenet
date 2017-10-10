@@ -82,8 +82,8 @@ class Multi_GPU_train():
             
                     # Tensor log for validation values
                     valid_summary = tf.Summary()
-                    valid_summary.value.add(tag='valid/loss', simple_value=value_loss)
-                    valid_summary.value.add(tag='valid/ler', simple_value=value_ler)
+                    valid_summary.value.add(tag='valid/loss', simple_value=valid_loss)
+                    valid_summary.value.add(tag='valid/ler', simple_value=valid_ler)
                     valid_summary.value.add(tag='valid/best_valid_ler', simple_value=best_valid_ler)
                     summary_writer.add_summary(valid_summary, epoch)
                     self.write_log(epoch, loss_, ler_, valid_loss, valid_ler, start_time)
