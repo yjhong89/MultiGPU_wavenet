@@ -96,6 +96,7 @@ def _generate_wave_label_batch(wave, label, min_queue_examples, batch_size, shuf
     return wave, label, sequence_len
 
 @ops.producer_func
+# src_list is a file name of label and mfcc_file which are 'byte' encoded
 def _load_mfcc(src_list):
     # Label, wave_file
     # Both file paths are encoded as 'byte' class, need to decode to string
@@ -117,10 +118,11 @@ def get_batches(data_category, batch_size, num_gpu, num_threads=10, shuffle=Fals
 
     # Make batches for each gpu
     for i in range(num_gpu):
-        waves, labels, seq_len = _generate_wave_label_batch(wave=wave_q, label=label_q, min_queue_examples=min_queue_examples, batch_size=batch_size, shuffle=False, num_threads=num_threads)
+        waves, labels, seq_len = _generate_wave_label_batch(wave=wave_q, label=label_q, min_queue_examples=min_queue_examples, batch_size=batch_size, shuffle=shuffle, num_threads=num_threads)
         indices = tf.where(tf.not_equal(tf.cast(labels, tf.float32), 0.))
         #sparse_label = ops.sparse_tensor_form(labels)
         wave_list.append(waves)
+        # '-1' for zero-based index
         label_list.append(tf.SparseTensor(indices=indices, values=tf.gather_nd(labels, indices)-1, dense_shape=tf.cast(tf.shape(labels), tf.int64)))
         seq_len_list.append(seq_len)
 

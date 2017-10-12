@@ -56,7 +56,9 @@ class Wavenet_Model():
 
         for i in range(self.args.num_gpu):
             with tf.device('/gpu:%d' % i), tf.variable_scope(tf.get_variable_scope()):
+                print(tf.get_variable_scope().name)
                 # tf.name_scope is ignored by tf.get_variable
+                # Name scopes can be opened in addition to a variable scope, and then they will only affect the names of the 'ops' but not of variables
                 with tf.name_scope('tower_%d' % i) as scope:
                     print('Building %s' % scope)
                     # If gpu index is not 0, reuse variable
@@ -92,7 +94,7 @@ class Wavenet_Model():
                     print('Compute gradients of %s' % scope)
                     if self.reuse or i >0:
                         tf.get_variable_scope().reuse_variables()
-                
+                    # trainable variables are located at gpu:0 since they are shared all across gpus 
                     trainable_vr = tf.trainable_variables()
                     # compute_gradients outputs list of tuples(grad,var)
                     grad_var = optimizer.compute_gradients(self.loss_list[i], trainable_vr)

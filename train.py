@@ -86,7 +86,7 @@ class Multi_GPU_train():
                     valid_summary.value.add(tag='valid/ler', simple_value=valid_ler)
                     valid_summary.value.add(tag='valid/best_valid_ler', simple_value=best_valid_ler)
                     summary_writer.add_summary(valid_summary, epoch)
-                    self.write_log(epoch, loss_, ler_, valid_loss, valid_ler, start_time)
+                    self.write_log(epoch+1, loss_, ler_, valid_loss, valid_ler, start_time)
                     summary_writer.add_summary(train_summary, epoch)
                     summary_writer.flush()
             

@@ -34,7 +34,7 @@ def main():
     parser.add_argument('--alpha', type=float, default=2.0, help='language model weight')
     parser.add_argument('--beta', type=float, default=1.5, help='insertion bonus')
     parser.add_argument('--beam_width', type=int, default=128)
-    parser.add_argument('--num_blocks', type=int, default=3)
+    parser.add_argument('--num_blocks', type=int, default=4)
     parser.add_argument('--filter_width', type=int, default=9)
     parser.add_argument('--skip_filter_width', type=int, default=3)
     parser.add_argument('--num_wavenet_layers', type=int, default=10)
