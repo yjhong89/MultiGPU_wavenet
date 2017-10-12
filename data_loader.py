@@ -130,4 +130,4 @@ def get_batches(data_category, batch_size, num_gpu, num_threads=10, shuffle=Fals
     
 
 if __name__ == "__main__":
-   process_input('train') 
+   process_input('test') 

@@ -45,7 +45,11 @@ class Wavenet_Model():
         decoded, _ = tf.nn.ctc_greedy_decoder(logits_reshaped, seq_len)	
         ler = tf.reduce_mean(tf.edit_distance(tf.cast(decoded[0], tf.int32), label))
 
-        return logits, probability, loss, ler
+        if self.args.is_train:
+            return logits, probability, loss, ler
+        # Get decode information
+        else:
+            return logits, probability, loss, ler, decoded
 
     def build_model(self):
         # Build towers for each GPU
@@ -53,6 +57,8 @@ class Wavenet_Model():
         self.prob_list = list()
         self.loss_list = list()
         self.ler_list = list()
+        if self.args.is_train is not True:
+            self.dcd = list()
 
         for i in range(self.args.num_gpu):
             with tf.device('/gpu:%d' % i), tf.variable_scope(tf.get_variable_scope()):
@@ -65,8 +71,13 @@ class Wavenet_Model():
                     if self.reuse or i > 0:
                         # Call reuse_variables()
                         tf.get_variable_scope().reuse_variables()
-                        
-                    logits, prob, loss, ler = self.build_tower(self.wave_batch_list[i], self.label_batch_list[i], self.seq_len_list[i])
+
+                    if self.args.is_train:                        
+                        logits, prob, loss, ler = self.build_tower(self.wave_batch_list[i], self.label_batch_list[i], self.seq_len_list[i])
+                    else:
+                        logits, prob, loss, ler, decoded = self.build_tower(self.wave_batch_list[i], self.label_batch_list[i], self.seq_len_list[i])
+                        self.dcd.append(decoded)
+
                     self.logits_list.append(logits)
                     self.prob_list.append(prob)
                     self.loss_list.append(loss)

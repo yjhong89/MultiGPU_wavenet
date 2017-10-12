@@ -372,7 +372,7 @@ def reverse_sparse_tensor(sparse_t):
         seq_length = len(list(filter(lambda x: x[0] == i, indices)))
         # Use append method instead of extend method
         # Since extend method returns each element iteratively so each element is not seperated
-        sequences.append(np.asarray(value[start:(start+seq_length)]))
+        sequences.append(np.asarray(value[start:(start+seq_length)]+1))
         start += seq_length
     
     return sequences

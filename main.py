@@ -67,7 +67,7 @@ def main():
     	else:
             from decoder import DECODER
             print('Decoding')	
-            decoding = DECODER(args, sess, model_type, args.mode)
+            decoding = DECODER(args, sess)
 
     
 def str2bool(v):
