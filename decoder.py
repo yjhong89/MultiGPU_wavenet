@@ -16,7 +16,7 @@ class DECODER():
         with tf.device('/cpu:0'):
             print('\tLoading test data')
             self.args.num_gpu = 1
-            test_wave, test_label, test_seq_len = data_loader.get_batches(data_category='test', shuffle=self.args.shuffle, batch_size=self.args.batch_size, num_gpu=self.args.num_gpu, num_threads=2)
+            test_wave, test_label, test_seq_len = data_loader.get_batches(data_category='test', shuffle=self.args.shuffle, batch_size=self.args.batch_size, num_gpu=self.args.num_gpu, num_threads=1)
        
         self.test_net = Wavenet_Model(self.args, test_wave, test_label, test_seq_len, self.global_step, name='test')
         self.test_net.build_model()
