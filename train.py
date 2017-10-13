@@ -60,6 +60,9 @@ class Multi_GPU_train():
         threads = tf.train.start_queue_runners(sess=self.sess, coord=coord)
 
         try:
+            best_valid_ler = 1000
+            best_valid_loss = 1000
+
             for epoch in range(self.init_epoch, self.args.num_epoch):
                 start_time = time.time()
                 # Train
@@ -68,8 +71,6 @@ class Multi_GPU_train():
             
                 if (epoch+1) % self.args.valid_interval == 0:
                     # Valid
-                    best_valid_ler = 1000
-                    best_valid_loss = 1000
                     valid_loss = 0
                     valid_ler = 0
                     # Conduct validation several types for different composition of batch
