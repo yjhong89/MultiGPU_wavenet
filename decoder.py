@@ -4,6 +4,7 @@ import time, os, collections
 import data_loader
 from wavenet_model import Wavenet_Model
 from ops import *
+from tensorflow.python.client import timeline
 
 class DECODER():
     def __init__(self,args, sess):
@@ -26,6 +27,8 @@ class DECODER():
     
     
     def decode(self):
+        merged = tf.summary.merge_all()
+        writer = tf.summary.FileWriter('test_log', self.sess.graph)
         self.sess.run(tf.global_variables_initializer())
 
         if self.load():
@@ -37,9 +40,11 @@ class DECODER():
         threads = tf.train.start_queue_runners(sess=self.sess, coord=coord)
 
         try:
-            char_prob, decoded, ler_ = self.sess.run([self.test_net.probs, self.test_net.dcd, self.test_net.ler])
-
-            print('Label Error rate : %3.4f' % ler_)
+            run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+            run_metadata = tf.RunMetadata()
+            char_prob, decoded, ler_, summary_ = self.sess.run([self.test_net.probs, self.test_net.dcd, self.test_net.ler, merged], options=run_options, run_metadata=run_metadata)
+            writer.add_run_metadata(run_metadata, 'check')
+            #print('Label Error rate : %3.4f' % ler_)
     
             decoded_original = reverse_sparse_tensor(decoded[0][0])
             
@@ -62,7 +67,17 @@ class DECODER():
             		str_decoded[i] = str_decoded[i].replace(chr(ord('z')+3), "")
             		str_decoded[i] = str_decoded[i].replace(chr(ord('z')+2), "'")
             		str_decoded[i] = str_decoded[i].replace(chr(ord('z')+1), ' ')
-            	print(str_decoded[i])
+            	#print(str_decoded[i])
+            options = tf.profiler.ProfileOptionBuilder.time_and_memory()
+            options["min_bytes"] = 0
+            options["min_micros"] = 0
+            options["select"] = ("bytes", "peak_bytes", "output_bytes", "residual_bytes", "micros")
+            tf.profiler.profile(tf.get_default_graph(), run_meta=run_metadata, cmd="scope", options=options)
+            
+            tl = timeline.Timeline(run_metadata.step_stats)
+            ctf = tl.generate_chrome_trace_format()
+            with open('timeline.json', 'w') as f:
+                f.write(ctf)
 
         except KeyboardInterrupt:
             print('Keyboard')
