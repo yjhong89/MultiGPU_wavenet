@@ -8,6 +8,8 @@ from ops import *
 from wavenet_model import Wavenet_Model
 from train import Multi_GPU_train 
 
+os.environ['CUDA_VISIBLE_ORDER'] = 'PCI_BUS_ID'
+os.environ['CUDA_VISIBLE_DEVICES'] = '1,3'
 
 def main():
     parser = argparse.ArgumentParser()
@@ -17,8 +19,8 @@ def main():
     parser.add_argument('--files_dir', type=str, default='./files')
     parser.add_argument('--log_dir', type=str, default='./logs')
     parser.add_argument('--checkpoint_dir', type=str, default='./checkpoint', help='To restore variables and model')
-    parser.add_argument('--batch_size', type=int, default=10)
-    parser.add_argument('--num_gpu', type=int, default=2)
+    parser.add_argument('--batch_size', type=int, default=1)
+    parser.add_argument('--num_gpu', type=int, default=1)
     parser.add_argument('--num_epoch', type=int, default=300000)
     parser.add_argument('--valid_interval', type=int, default=1000)
     parser.add_argument('--valid_iteration', type=int, default=100)
@@ -34,7 +36,7 @@ def main():
     parser.add_argument('--alpha', type=float, default=2.0, help='language model weight')
     parser.add_argument('--beta', type=float, default=1.5, help='insertion bonus')
     parser.add_argument('--beam_width', type=int, default=128)
-    parser.add_argument('--num_blocks', type=int, default=5)
+    parser.add_argument('--num_blocks', type=int, default=4)
     parser.add_argument('--filter_width', type=int, default=9)
     parser.add_argument('--skip_filter_width', type=int, default=3)
     parser.add_argument('--num_wavenet_layers', type=int, default=9)
