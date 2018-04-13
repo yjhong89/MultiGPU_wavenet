@@ -9,7 +9,7 @@ from wavenet_model import Wavenet_Model
 from train import Multi_GPU_train 
 
 os.environ['CUDA_VISIBLE_ORDER'] = 'PCI_BUS_ID'
-os.environ['CUDA_VISIBLE_DEVICES'] = '1,3'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0,1'
 
 def main():
     parser = argparse.ArgumentParser()
@@ -19,15 +19,15 @@ def main():
     parser.add_argument('--files_dir', type=str, default='./files')
     parser.add_argument('--log_dir', type=str, default='./logs')
     parser.add_argument('--checkpoint_dir', type=str, default='./checkpoint', help='To restore variables and model')
-    parser.add_argument('--batch_size', type=int, default=1)
-    parser.add_argument('--num_gpu', type=int, default=1)
+    parser.add_argument('--batch_size', type=int, default=10)
+    parser.add_argument('--num_gpu', type=int, default=2)
     parser.add_argument('--num_epoch', type=int, default=300000)
     parser.add_argument('--valid_interval', type=int, default=1000)
     parser.add_argument('--valid_iteration', type=int, default=100)
-    parser.add_argument('--learning_rate', type=float, default=0.001)
+    parser.add_argument('--learning_rate', type=float, default=0.002)
     parser.add_argument('--is_train', type=str2bool, default='t')
-    parser.add_argument('--layer_norm', type=str2bool, default='t')
-    parser.add_argument('--init_from', type=str2bool, default='n', help='Continue training from saved model')
+    parser.add_argument('--layer_norm', type=str2bool, default='n')
+    parser.add_argument('--init_from', type=str2bool, default='y', help='Continue training from saved model')
     parser.add_argument('--shuffle', type=str2bool, default='t') 
     parser.add_argument('--num_features', type=int, default=39)
     parser.add_argument('--num_classes', type=int, default=29, help='All lowercase letter, space, apstr, eos, blank : last class is always reserved for blank')
