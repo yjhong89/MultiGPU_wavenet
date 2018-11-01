@@ -1,4 +1,6 @@
-# MultiGPU_wavenet
+# MultiGPU wavenet
+
+Speech recognition using multi-gpu with Wavenet model
 
 Reference
 ---------
